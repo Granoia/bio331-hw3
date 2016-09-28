@@ -47,7 +47,16 @@ def make_adj_ls(nodes, edges):
 
     return d
 
-
+def set_to_list(s):
+    """
+    takes a set, returns a list with the contents of the set
+    """
+    ls = []
+    for item in s:
+        ls.append(item)
+    return ls
+    
+    
 def RWR(adj_ls, start_node, q, t):
     """
     random walk with restarts
