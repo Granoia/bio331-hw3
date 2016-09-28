@@ -128,6 +128,30 @@ def BFS_distances(adj_ls, start_node):
 
     return
 
+def get_neighbors(adj_ls, node):
+    return adj_ls[node]['out']
+
+def get_visited(adj_ls, node):
+    return adj_ls[node]['visited']
+
+def visit(adj_ls, node):
+    adj_ls[node]['visited'] = True
+
+def devisit(adj_ls, node):
+    adj_ls[node]['visited'] = False
+
+def reset_visits(adj_ls):
+    for k in adj_ls:
+        devisit(adj_ls, k)
+
+def get_dist(adj_ls, node):
+    return adj_ls[node]['distance']
+        
+def set_dist(adj_ls, node, d):
+    adj_ls[node]['distance'] = d
+    
+    
+    
 def BFS_d_normalizer(adj_ls):
     """
     takes an adj_ls THAT HAS ALREADY BEEN MODIFIED BY BFS (that's important)
