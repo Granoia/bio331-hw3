@@ -164,8 +164,9 @@ def RWR(adj_ls, start_node, q, t):
             current = start_node
 
     for e in counts:
-        counts[e] = math.log(counts[e])
-        
+        if counts[e] != 0:
+            counts[e] = math.log(counts[e])
+            
     new = count_normalizer(counts)
         
     return new
@@ -371,5 +372,13 @@ def main():
     graphspace_utils.postGraph('hw3-2','hw3-2.json','franzni@reed.edu','bio331')
 
 
+#I can't really discern any difference when I change the number of timesteps, but that might be because my normalization method on the differences graph is weird?
+#I have a feeling that there should be less and less difference between the two graphs as the number of timesteps increases, but since I normalized that makes it difficult to tell.
+#
+#Changing q definitely makes a difference though. The nodes that are further away gain a greater amount of difference as q goes down (since it's harder for the random walk to reach the outer nodes when it's more likely
+#to restart.
+
+
+    
 if __name__ == '__main__':
     main()
