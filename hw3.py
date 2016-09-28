@@ -3,7 +3,6 @@ import random
 import math
 
 
-#bio331 homework 3
 
 
 def readData(filename):
@@ -210,7 +209,7 @@ def getRWRNodeAttributes(nodes, counts):
     return attrs
 
     
-def getCompNodeAttributes(nodes, norm_dist, norm_counts)
+def getCompNodeAttributes(nodes, norm_dist, norm_counts):
     attrs = {}
     for n in nodes:
         attrs[n] = {}
@@ -221,6 +220,10 @@ def getCompNodeAttributes(nodes, norm_dist, norm_counts)
         
 
 def diff_to_color(node, norm_dist, norm_counts):
+    """
+    finds the difference between the RWR and shortest path distribution for a given node and converts it into a color.
+    if it's comparatively more traveled from the RWR, the node will be majenta. If the path is comparatively more distant, it will be green. If it's equally traveled and distant, the node will be white
+    """
     norm_diff = norm_dist[node] - norm_counts[node]
     
     if -0.0001 <= norm_diff <= 0.0001:
