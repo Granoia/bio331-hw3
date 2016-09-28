@@ -1,9 +1,19 @@
+#########
+######### BIO 331 HOMEWORK 3
+######### NICK FRANZESE
+#########
+
+
+
 import random
 import math
 import json_utils
 import graphspace_utils
 
 
+############################################
+#Data reading functions (there's only one)##
+############################################
 
 def readData(filename):
     """
@@ -25,7 +35,27 @@ def readData(filename):
                 edge_ls.append(edge)
 
     return set_to_list(node_set), edge_ls, edge_type_dict
+
+
+def set_to_list(s):
+    """
+    helper function for readData() and probably some other things
+    takes a set, returns a list with the contents of the set
+    """
+    ls = []
+    for item in s:
+        ls.append(item)
+    return ls
     
+    
+
+    
+
+############################################
+#Graph processing functions#################
+############################################
+
+
 def make_adj_ls(nodes, edges):
     """
     make an adjacency list in the form of a dictionary whose keys are nodes and whose values are dictionaries
@@ -46,16 +76,72 @@ def make_adj_ls(nodes, edges):
 
     return d
 
-def set_to_list(s):
-    """
-    takes a set, returns a list with the contents of the set
-    """
-    ls = []
-    for item in s:
-        ls.append(item)
-    return ls
+
+#accession functions for the adj_ls
+def get_neighbors(adj_ls, node):
+    return adj_ls[node]['out']
+
+def get_visited(adj_ls, node):
+    return adj_ls[node]['visited']
+
+def visit(adj_ls, node):
+    adj_ls[node]['visited'] = True
+
+def devisit(adj_ls, node):
+    adj_ls[node]['visited'] = False
+
+def reset_visits(adj_ls):
+    for k in adj_ls:
+        devisit(adj_ls, k)
+
+def get_dist(adj_ls, node):
+    return adj_ls[node]['distance']
+        
+def set_dist(adj_ls, node, d):
+    adj_ls[node]['distance'] = d
+        
+
     
-    
+def BFS_distances(adj_ls, start_node):
+    """
+    alters the adj_ls so that distances and visited status reflect the results of the BFS from start_node
+    """
+    Q = queue()
+    Q.enqueue(start_node)
+    visit(adj_ls, start_node)
+    set_dist(adj_ls,start_node,0)
+    while Q.length() != 0:
+        w = Q.dequeue()
+        w_dist = get_dist(adj_ls,w)
+        for n in get_neighbors(adj_ls, w):
+            if not get_visited(adj_ls, n):
+                visit(adj_ls, n)
+                Q.enqueue(n)
+                set_dist(adj_ls, n, w_dist + 1)
+
+    return
+
+#queue for implementation of BFS_distances()
+class queue:
+    def __init__(self):
+        self.q = []
+
+    def enqueue(self,new):
+        self.q.append(new)
+
+    def dequeue(self):
+        if len(self.q) == 0:
+            return None
+        else:
+            ret = self.q.pop(0)
+            return ret
+
+    def length(self):
+        return len(self.q)
+
+
+
+
 def RWR(adj_ls, start_node, q, t):
     """
     random walk with restarts
@@ -85,6 +171,17 @@ def RWR(adj_ls, start_node, q, t):
     return new
 
 
+    
+    
+    
+    
+    
+##########################################################################################
+#Functions that process the results of the graph processing data (mostly normalization)###
+########################################################################################## 
+    
+    
+
 def count_normalizer(counts):
     """
     helper function for RWR
@@ -109,47 +206,8 @@ def count_normalizer(counts):
     return new_dict
     
     
-def BFS_distances(adj_ls, start_node):
-    """
-    alters the adj_ls so that distances and visited status reflect the results of the BFS from start_node
-    """
-    Q = queue()
-    Q.enqueue(start_node)
-    visit(adj_ls, start_node)
-    set_dist(adj_ls,start_node,0)
-    while Q.length() != 0:
-        w = Q.dequeue()
-        w_dist = get_dist(adj_ls,w)
-        for n in get_neighbors(adj_ls, w):
-            if not get_visited(adj_ls, n):
-                visit(adj_ls, n)
-                Q.enqueue(n)
-                set_dist(adj_ls, n, w_dist + 1)
 
-    return
 
-def get_neighbors(adj_ls, node):
-    return adj_ls[node]['out']
-
-def get_visited(adj_ls, node):
-    return adj_ls[node]['visited']
-
-def visit(adj_ls, node):
-    adj_ls[node]['visited'] = True
-
-def devisit(adj_ls, node):
-    adj_ls[node]['visited'] = False
-
-def reset_visits(adj_ls):
-    for k in adj_ls:
-        devisit(adj_ls, k)
-
-def get_dist(adj_ls, node):
-    return adj_ls[node]['distance']
-        
-def set_dist(adj_ls, node, d):
-    adj_ls[node]['distance'] = d
-    
     
     
 def BFS_d_normalizer(adj_ls):
@@ -164,86 +222,18 @@ def BFS_d_normalizer(adj_ls):
         new_dict[n] = (adj_ls[n]['distance']/float(max_d))
     
     return new_dict
-        
 
-class queue:
-    def __init__(self):
-        self.q = []
 
-    def enqueue(self,new):
-        self.q.append(new)
-
-    def dequeue(self):
-        if len(self.q) == 0:
-            return None
-        else:
-            ret = self.q.pop(0)
-            return ret
-
-    def length(self):
-        return len(self.q)
-        
-        
-        
-        
-def counts_to_color(counts, node):
-    """
-    takes a normalized dictionary of counts, converts it to a shade of green
-    """
-    if 0 <= counts[node] < .0001: #since the normalized dictionary contains floats, this deals with float 0
-        return '#{:02x}{:02x}{:02x}'.format(255,255,255)
-    
-    
-    g = int(counts[node] * 255)
-    return '#{:02x}{:02x}{:02x}'.format(0,g,0)
-    
 def get_max_dist(adj_ls):
-    #helper function for dist_to_color()
+    #helper function for BFS_d_normalizer()
     max_dist = 0
     for node in adj_ls:
         if max_dist < get_dist(adj_ls,node):
             max_dist = get_dist(adj_ls,node)
     return max_dist
-        
 
-def getEdgeAttributes(edges,edge_type_dict=None):
-    attrs = {}
-    for e in edges:
-        source = e[0]
-        target = e[1]
-        if source not in attrs:
-            attrs[source] = {}
-        attrs[source][target] = {}
-        attrs[source][target]['width'] = 2
-        attrs[source][target]['target_arrow_shape'] = 'triangle'
-        attrs[source][target]['target_arrow_fill'] = 'filled'
-        attrs[source][target]['target_arrow_color'] = 'black'
-        if edge_type_dict != None:
-            attrs[source][target]['popup'] = '<b>Edge Type:</b> ' + edge_type_dict[e]
-    return attrs
-
-
-def getRWRNodeAttributes(nodes, counts):
-    attrs = {}
-    for n in nodes:
-        attrs[n] = {}
-        attrs[n]['id'] = n
-        attrs[n]['content'] = n
-        attrs[n]['background_color'] = counts_to_color(counts, n)
-    return attrs
 
     
-def getCompNodeAttributes(nodes, norm_dist, norm_counts):
-    attrs = {}
-    norm_diff_dict = norm_of_diffs(norm_dist,norm_counts)
-    for n in nodes:
-        attrs[n] = {}
-        attrs[n]['id'] = n
-        attrs[n]['content'] = n
-        attrs[n]['background_color'] = diff_to_color(n, norm_diff_dict)
-    return attrs
-        
-
 def norm_of_diffs(norm_dist, norm_counts):
     """
     makes a dictionary that normalizes the positive and negative values when you take the difference between the normalized differences and the normalized counts.
@@ -277,9 +267,72 @@ def norm_of_diffs(norm_dist, norm_counts):
         new_dict[n] = new_dict[n]/pos_max
 
     return new_dict #now normalized on the negative side and positive side
-                
+
+    
+    
+    
+    
+    
+    
+###########################################################################
+#graphspace attribute functions############################################
+###########################################################################
+
+def getEdgeAttributes(edges,edge_type_dict=None):
+    attrs = {}
+    for e in edges:
+        source = e[0]
+        target = e[1]
+        if source not in attrs:
+            attrs[source] = {}
+        attrs[source][target] = {}
+        attrs[source][target]['width'] = 2
+        attrs[source][target]['target_arrow_shape'] = 'triangle'
+        attrs[source][target]['target_arrow_fill'] = 'filled'
+        attrs[source][target]['target_arrow_color'] = 'black'
+        if edge_type_dict != None:
+            attrs[source][target]['popup'] = '<b>Edge Type:</b> ' + edge_type_dict[e]
+    return attrs
 
 
+def getRWRNodeAttributes(nodes, counts):
+    """
+    gets the node attributes for the RWR graph
+    """
+    attrs = {}
+    for n in nodes:
+        attrs[n] = {}
+        attrs[n]['id'] = n
+        attrs[n]['content'] = n
+        attrs[n]['background_color'] = counts_to_color(counts, n)
+    return attrs
+
+    
+def getCompNodeAttributes(nodes, norm_dist, norm_counts):
+    """
+    gets the node attributes for the RWR / shortest path comparison graph
+    """
+    attrs = {}
+    norm_diff_dict = norm_of_diffs(norm_dist,norm_counts)
+    for n in nodes:
+        attrs[n] = {}
+        attrs[n]['id'] = n
+        attrs[n]['content'] = n
+        attrs[n]['background_color'] = diff_to_color(n, norm_diff_dict)
+    return attrs
+
+
+def counts_to_color(counts, node):
+    """
+    takes a normalized dictionary of counts, converts it to a shade of green
+    """
+    if 0 <= counts[node] < .0001: #since the normalized dictionary contains floats, this deals with float 0
+        return '#{:02x}{:02x}{:02x}'.format(255,255,255)
+    
+    
+    g = int(counts[node] * 255)
+    return '#{:02x}{:02x}{:02x}'.format(0,g,0)
+    
 def diff_to_color(node, norm_diff_dict):
     """
     finds the difference between the RWR and shortest path distribution for a given node and converts it into a color.
