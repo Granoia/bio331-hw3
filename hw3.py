@@ -1,7 +1,7 @@
-import lab3
 import random
 import math
-
+import json_utils
+import graphspace_utils
 
 
 
@@ -63,7 +63,7 @@ def RWR(adj_ls, start_node, q, t):
     """
     counts = {}
     for node in adj_ls:
-        counts['node'] = 0
+        counts[node] = 0
     
     current = start_node
     for step in range(t):
@@ -80,7 +80,7 @@ def RWR(adj_ls, start_node, q, t):
     for e in counts:
         counts[e] = math.log(counts[e])
         
-    new = counts_normalizer(counts)
+    new = count_normalizer(counts)
         
     return new
 
@@ -235,35 +235,73 @@ def getRWRNodeAttributes(nodes, counts):
     
 def getCompNodeAttributes(nodes, norm_dist, norm_counts):
     attrs = {}
+    norm_diff_dict = norm_of_diffs(norm_dist,norm_counts)
     for n in nodes:
         attrs[n] = {}
         attrs[n]['id'] = n
         attrs[n]['content'] = n
-        attrs[n]['background_color'] = diff_to_color(n, norm_dist, norm_counts)
+        attrs[n]['background_color'] = diff_to_color(n, norm_diff_dict)
     return attrs
         
 
-def diff_to_color(node, norm_dist, norm_counts):
+def norm_of_diffs(norm_dist, norm_counts):
+    """
+    makes a dictionary that normalizes the positive and negative values when you take the difference between the normalized differences and the normalized counts.
+    so the node with -1 ends up being the node with the most relative difference favoring RWR and the node with 1 ends up being the node with the most relative difference favoring shortest path.
+    """
+    new_dict = {}
+    neg_ls = []
+    pos_ls = []
+    for n in norm_dist:
+        diff = norm_dist[n] - norm_counts[n]
+        if diff < 0:
+            neg_ls.append(n)
+        else:
+            pos_ls.append(n)
+        new_dict[n] = diff
+
+    neg_max = 0
+    for n in neg_ls:
+        if abs(new_dict[n]) > abs(neg_max):
+            neg_max = new_dict[n]
+
+    pos_max = 0
+    for n in pos_ls:
+        if new_dict[n] > pos_max:
+            pos_max = new_dict[n]
+
+    for n in neg_ls:
+        new_dict[n] = new_dict[n]/neg_max * -1
+
+    for n in pos_ls:
+        new_dict[n] = new_dict[n]/pos_max
+
+    return new_dict #now normalized on the negative side and positive side
+                
+
+
+def diff_to_color(node, norm_diff_dict):
     """
     finds the difference between the RWR and shortest path distribution for a given node and converts it into a color.
     if it's comparatively more traveled from the RWR, the node will be majenta. If the path is comparatively more distant, it will be green. If it's equally traveled and distant, the node will be white
     """
-    norm_diff = norm_dist[node] - norm_counts[node]
+    norm_diff = norm_diff_dict[node]
     
     if -0.0001 <= norm_diff <= 0.0001:
         return '#{:02x}{:02x}{:02x}'.format(255,255,255)
         
     elif norm_diff < 0:
-        modifier = norm_diff * -1 * 255
+        modifier = int(norm_diff * -1 * 255)
         return '#{:02x}{:02x}{:02x}'.format(255,255-modifier,255)
     
     elif norm_diff > 0:
-        modifier = norm_diff * 255
+        modifier = int(norm_diff * 255)
         return '#{:02x}{:02x}{:02x}'.format(255-modifier,255,255-modifier)
 
 def main():
     node_ls, edge_ls, edge_dict = readData('EGFR1-reachable.txt')
     adj_ls = make_adj_ls(node_ls, edge_ls)
+    BFS_distances(adj_ls, 'EGF')
     norm_dist = BFS_d_normalizer(adj_ls)
     norm_counts = RWR(adj_ls, 'EGF', 0.9, 1000000)
     edge_attrs = getEdgeAttributes(edge_ls, edge_dict)
